@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Visibility Trap — Olele Salvador for My Runway Group</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400;1,9..144,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0D0D0B;
+    --text:     #F2EBD9;
+    --gold:     #C8913A;
+    --terra:    #B85C38;
+    --muted:    #6B6459;
+    --subtle:   #C4B9A5;
+    --surface:  #141412;
+    --border:   #252520;
+
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-body:    'Satoshi', system-ui, -apple-system, sans-serif;
+    --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    height: 100%;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== DECK SHELL ===== */
+  .deck {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 56px 80px 72px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+    overflow: hidden;
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ===== NAVIGATION ===== */
+  .nav {
+    position: fixed;
+    bottom: 28px;
+    right: 44px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 200;
+    cursor: default;
+  }
+
+  .nav-counter {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    min-width: 36px;
+    text-align: center;
+  }
+
+  .nav-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: border-color 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-body);
+  }
+
+  .nav-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* ===== PROGRESS BAR ===== */
+  .progress {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: var(--gold);
+    transition: width 0.35s ease;
+    z-index: 200;
+  }
+
+  /* ===== SHARED TOKENS ===== */
+  .label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    flex-shrink: 0;
+  }
+
+  .divider {
+    width: 40px;
+    height: 2px;
+    background: var(--gold);
+    margin: 20px 0;
+    flex-shrink: 0;
+  }
+
+  .d-xl {
+    font-family: var(--font-display);
+    font-size: clamp(52px, 7.5vw, 108px);
+    font-weight: 900;
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+
+  .d-lg {
+    font-family: var(--font-display);
+    font-size: clamp(34px, 4.8vw, 68px);
+    font-weight: 700;
+    line-height: 1.0;
+    letter-spacing: -0.025em;
+    color: var(--text);
+  }
+
+  .d-md {
+    font-family: var(--font-display);
+    font-size: clamp(22px, 2.8vw, 40px);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    color: var(--text);
+  }
+
+  .d-sm {
+    font-family: var(--font-display);
+    font-size: clamp(18px, 2vw, 28px);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+
+  .body-lg {
+    font-family: var(--font-body);
+    font-size: clamp(15px, 1.5vw, 19px);
+    font-weight: 400;
+    line-height: 1.72;
+    color: var(--subtle);
+  }
+
+  .body-md {
+    font-family: var(--font-body);
+    font-size: clamp(13px, 1.2vw, 16px);
+    font-weight: 400;
+    line-height: 1.65;
+    color: var(--subtle);
+  }
+
+  .gold  { color: var(--gold); }
+  .terra { color: var(--terra); }
+  .muted { color: var(--muted); }
+  .bold  { font-weight: 600; color: var(--text); }
+
+  /* ============================= */
+  /* SLIDE 01 — COVER              */
+  /* ============================= */
+  .s-cover {
+    justify-content: space-between;
+    background: var(--bg);
+  }
+
+  .cover-badges {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .badge {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 5px 10px;
+  }
+
+  .badge-gold {
+    color: var(--gold);
+    border-color: rgba(200,145,58,0.4);
+  }
+
+  .cover-title {
+    font-family: var(--font-display);
+    font-size: clamp(72px, 11vw, 148px);
+    font-weight: 900;
+    line-height: 0.88;
+    letter-spacing: -0.035em;
+    color: var(--text);
+  }
+
+  .cover-subtitle {
+    font-family: var(--font-display);
+    font-size: clamp(17px, 2vw, 26px);
+    font-weight: 400;
+    font-style: italic;
+    color: var(--muted);
+    margin-top: 18px;
+    max-width: 560px;
+    line-height: 1.35;
+  }
+
+  .cover-footer {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-top: 36px;
+  }
+
+  .cover-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .cover-sep {
+    width: 1px;
+    height: 14px;
+    background: var(--border);
+  }
+
+  /* ============================= */
+  /* SLIDE 02 — THE DOOR IS OPEN   */
+  /* ============================= */
+  .stat-row {
+    display: flex;
+    gap: 0;
+    margin-top: 28px;
+    flex-shrink: 0;
+  }
+
+  .stat-item {
+    flex: 1;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    padding-right: 32px;
+  }
+
+  .stat-item:last-child { padding-right: 0; }
+
+  .stat-num {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 4vw, 52px);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--gold);
+  }
+
+  .stat-desc {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+
+  /* ============================= */
+  /* SLIDE 03 — THE PROBLEM        */
+  /* ============================= */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 52px;
+    margin-top: 4px;
+    flex: 1;
+    align-items: start;
+  }
+
+  .problem-left {
+    border-left: 2px solid var(--terra);
+    padding-left: 24px;
+  }
+
+  .terra-tag {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--terra);
+    margin-top: 20px;
+  }
+
+  /* ============================= */
+  /* SLIDE 04 — THESIS             */
+  /* ============================= */
+  .s-thesis {
+    justify-content: center;
+    padding: 72px 80px;
+  }
+
+  .thesis-wrap {
+    border-left: 3px solid var(--gold);
+    padding-left: 36px;
+    max-width: 880px;
+  }
+
+  .thesis-quote {
+    font-family: var(--font-display);
+    font-size: clamp(26px, 3.2vw, 44px);
+    font-weight: 600;
+    line-height: 1.22;
+    letter-spacing: -0.015em;
+    color: var(--text);
+  }
+
+  .thesis-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-top: 24px;
+    display: block;
+  }
+
+  .thesis-context {
+    font-family: var(--font-body);
+    font-size: clamp(13px, 1.3vw, 16px);
+    line-height: 1.65;
+    color: var(--subtle);
+    margin-top: 20px;
+    max-width: 680px;
+  }
+
+  /* ============================= */
+  /* SLIDE 05 — THE SESSION        */
+  /* ============================= */
+  .session-title {
+    font-family: var(--font-display);
+    font-size: clamp(20px, 2.4vw, 34px);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: var(--gold);
+    max-width: 720px;
+  }
+
+  .session-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin-top: 24px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .session-cell {
+    background: var(--bg);
+    padding: 20px 24px;
+  }
+
+  .cell-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 7px;
+  }
+
+  .cell-value {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.45;
+  }
+
+  /* ============================= */
+  /* SLIDE 06 — THE GUEST          */
+  /* ============================= */
+  .guest-name {
+    font-family: var(--font-display);
+    font-size: clamp(44px, 6.5vw, 88px);
+    font-weight: 700;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin-top: 4px;
+  }
+
+  .guest-role {
+    font-family: var(--font-body);
+    font-size: clamp(14px, 1.6vw, 20px);
+    font-weight: 500;
+    color: var(--gold);
+    margin-top: 12px;
+    line-height: 1.3;
+  }
+
+  .guest-note {
+    max-width: 600px;
+    margin-top: 6px;
+  }
+
+  .secondary-target {
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+    margin-top: 24px;
+  }
+
+  .secondary-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  /* ============================= */
+  /* SLIDE 07 — WHAT RETURNS       */
+  /* ============================= */
+  .returns-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background: var(--border);
+    margin-top: 20px;
+    flex: 1;
+  }
+
+  .return-card {
+    background: var(--surface);
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .return-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+
+  .return-heading {
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .return-body {
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--subtle);
+    flex: 1;
+  }
+
+  /* ============================= */
+  /* SLIDE 08 — WHAT I BRING       */
+  /* ============================= */
+  .cred-list {
+    display: flex;
+    flex-direction: column;
+    margin-top: 16px;
+    flex: 1;
+  }
+
+  .cred-item {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 16px;
+    padding: 16px 0;
+    border-top: 1px solid var(--border);
+    align-items: start;
+  }
+
+  .cred-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--gold);
+    padding-top: 3px;
+  }
+
+  .cred-text {
+    font-family: var(--font-body);
+    font-size: clamp(13px, 1.3vw, 15px);
+    line-height: 1.6;
+    color: var(--subtle);
+  }
+
+  .cred-text strong { color: var(--text); font-weight: 600; }
+
+  .cred-coda {
+    font-family: var(--font-display);
+    font-size: clamp(16px, 1.8vw, 22px);
+    font-weight: 600;
+    font-style: italic;
+    color: var(--text);
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+    padding-bottom: 4px;
+  }
+
+  /* ============================= */
+  /* SLIDE 09 — INVESTMENT         */
+  /* ============================= */
+  .invest-wrap {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 56px;
+    margin-top: 12px;
+    flex: 1;
+  }
+
+  .invest-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: clamp(12px, 1.2vw, 14px);
+    margin-top: 4px;
+  }
+
+  .invest-table td {
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+    color: var(--subtle);
+    vertical-align: middle;
+  }
+
+  .invest-table td:last-child {
+    text-align: right;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .invest-table .row-total td {
+    border-top: 1px solid var(--gold);
+    padding-top: 14px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .invest-table .row-total td:last-child {
+    color: var(--gold);
+    font-weight: 700;
+  }
+
+  .invest-note {
+    font-family: var(--font-body);
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--muted);
+    margin-top: 16px;
+  }
+
+  .deadline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--terra);
+    border: 1px solid rgba(184,92,56,0.5);
+    padding: 7px 14px;
+    margin-top: 20px;
+  }
+
+  .needs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 4px;
+  }
+
+  .need-item {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: 12px;
+    padding: 13px 0;
+    border-top: 1px solid var(--border);
+    font-size: clamp(12px, 1.1vw, 14px);
+    color: var(--subtle);
+    line-height: 1.5;
+  }
+
+  .need-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--gold);
+    padding-top: 2px;
+  }
+
+  .need-strong { color: var(--text); font-weight: 600; }
+
+  /* ============================= */
+  /* SLIDE 10 — THE CLOSE          */
+  /* ============================= */
+  .s-close {
+    justify-content: center;
+  }
+
+  .close-l1 {
+    font-family: var(--font-display);
+    font-size: clamp(26px, 3.2vw, 46px);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: var(--muted);
+    max-width: 780px;
+  }
+
+  .close-l2 {
+    font-family: var(--font-display);
+    font-size: clamp(30px, 4vw, 56px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--gold);
+    max-width: 760px;
+    margin-top: 16px;
+  }
+
+  .close-l3 {
+    font-family: var(--font-display);
+    font-size: clamp(28px, 3.8vw, 52px);
+    font-weight: 600;
+    font-style: italic;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-top: 16px;
+  }
+
+  .close-contact {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .close-name {
+    font-family: var(--font-body);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .close-email {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--gold);
+    letter-spacing: 0.04em;
+  }
+
+  /* ============================= */
+  /* SECTION LABEL POS             */
+  /* ============================= */
+  .slide-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+
+  /* ===== PRINT — one slide per page ===== */
+  @media print {
+    html, body { overflow: visible; height: auto; }
+    .deck { width: 297mm; height: auto; position: static; overflow: visible; cursor: default; }
+    .slide {
+      position: relative !important;
+      opacity: 1 !important;
+      pointer-events: all !important;
+      width: 297mm;
+      height: 167mm;
+      page-break-after: always;
+      page-break-inside: avoid;
+      padding: 14mm 20mm 18mm;
+      box-sizing: border-box;
+      overflow: hidden;
+      display: flex;
+    }
+    .slide:last-child { page-break-after: avoid; }
+    .nav, .progress { display: none !important; }
+    @page { size: 297mm 167mm landscape; margin: 0; }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- ===================== SLIDE 01 — COVER ===================== -->
+  <div class="slide s-cover active" data-index="0">
+    <div class="cover-badges">
+      <span class="badge">Prepared by Olele Salvador</span>
+      <span class="badge badge-gold">afriCANNES · My Runway Group</span>
+      <span class="badge badge-gold">LIONS Creators · June 2026</span>
+    </div>
+    <div style="margin-top: auto;">
+      <div class="cover-title">THE<br>VISIBILITY<br>TRAP</div>
+      <div class="cover-subtitle">Why Africa's Most Creative Talent Is Still Someone Else's IP</div>
+      <div class="cover-footer">
+        <span class="cover-meta">A Cannes Lions 2026 Proposal</span>
+        <div class="cover-sep"></div>
+        <span class="cover-meta">For My Runway Group</span>
+        <div class="cover-sep"></div>
+        <span class="cover-meta">March 2026</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SLIDE 02 — THE DOOR IS OPEN ===================== -->
+  <div class="slide" data-index="1">
+    <div class="label">The Opportunity</div>
+    <div class="slide-body">
+      <div class="d-lg">The door is open.</div>
+      <div class="divider"></div>
+      <div class="body-lg" style="max-width: 700px;">
+        My Runway Group already has a seat at the Cannes Lions table. afriCANNES is the only Ghanaian creative initiative operating inside the world's most important festival of creativity. The focus group it co-hosted with the Cannes Lions programming team in 2025 is evidence that the relationship is institutional.
+      </div>
+      <div class="body-lg" style="margin-top: 12px; max-width: 560px; font-family: var(--font-display); font-style: italic; color: var(--gold); font-size: clamp(17px, 1.8vw, 22px);">
+        The question for 2026 is what that seat produces.
+      </div>
+      <div class="stat-row" style="margin-top: auto;">
+        <div class="stat-item">
+          <div class="stat-num">2025</div>
+          <div class="stat-desc">Focus group co-hosted with Cannes Lions programming team. The relationship exists.</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" style="color: var(--text);">2026</div>
+          <div class="stat-desc">This proposal. A hosted session that turns institutional presence into institutional voice.</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" style="font-size: clamp(22px, 2.5vw, 34px); line-height: 1.1; color: var(--subtle);">LIONS<br>Creators</div>
+          <div class="stat-desc">The dedicated creator economy track — the exact home for this session.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SLIDE 03 — THE PROBLEM ===================== -->
+  <div class="slide" data-index="2">
+    <div class="label">The Problem</div>
+    <div class="slide-body">
+      <div class="d-lg" style="max-width: 820px;">
+        The conversation is happening.<br>
+        The problem is <span class="gold">who is having it.</span>
+      </div>
+      <div class="divider"></div>
+      <div class="problem-grid">
+        <div class="problem-left">
+          <div class="body-lg">
+            Africa's presence at Cannes is growing. The creator economy is on the agenda. The conversation about African markets, talent, and soft power has arrived.
+          </div>
+        </div>
+        <div>
+          <div class="body-lg">
+            Most voices shaping that conversation are Western consultants, diaspora-adjacent executives, and researchers observing Africa from the outside. Very few have spent the last decade building independent media from inside Accra, covering the culture as it happens, and documenting, with evidence, exactly why Africa's creative talent keeps producing world-class output while the systems around it keep failing to convert talent into sustainable economic value.
+          </div>
+        </div>
+      </div>
+      <div class="terra-tag" style="margin-top: 16px;">That is the gap the session fills.</div>
+    </div>
+  </div>
+
+  <!-- ===================== SLIDE 04 — THE THESIS ===================== -->
+  <div class="slide s-thesis" data-index="3">
+    <div class="label">The Thesis · Digital Sharecropping</div>
+    <div class="thesis-wrap" style="margin-top: 12px;">
+      <div class="thesis-quote">
+        Africa's most creative talent is functioning as high-performing digital sharecroppers for global tech giants; the brands celebrating African culture are funding the system that keeps it that way.
+      </div>
+      <span class="thesis-tag">Documented · Provable · Nearly a decade of journalism from inside Ghana's creative industry</span>
+      <div class="thesis-context">
+        African tech and media journalists are documenting the same underlying economic problem; in February 2026, TechCabal published analysis naming value capture as Africa's defining creative economy challenge. The specific intellectual framework, Digital Sharecropping, is mine. The receipts are in the work. Cannes provides the room where the people responsible for closing the gap are sitting.
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SLIDE 05 — THE SESSION ===================== -->
+  <div class="slide" data-index="4">
+    <div class="label">The Session</div>
+    <div class="slide-body">
+      <div class="session-title">
+        "The Visibility Trap: Why Africa's Most Creative Talent Is Still Someone Else's IP"
+      </div>
+      <div class="divider"></div>
+      <div class="body-lg" style="max-width: 680px;">
+        A fireside chat — me as host and moderator — positioned across from a global executive whose institution has a significant stake in Africa's creator economy, to ask the questions that room avoids.
+      </div>
+      <div class="session-grid" style="margin-top: auto;">
+        <div class="session-cell">
+          <div class="cell-label">Format</div>
+          <div class="cell-value">Fireside Chat — hosted by Olele Salvador</div>
+        </div>
+        <div class="session-cell">
+          <div class="cell-label">Track</div>
+          <div class="cell-value">LIONS Creators · Cannes Lions 2026</div>
+        </div>
+        <div class="session-cell">
+          <div class="cell-label">Dates</div>
+          <div class="cell-value">June 22–26, 2026 · Cannes, France</div>
+        </div>
+        <div class="session-cell">
+          <div class="cell-label">Pathway</div>
+          <div class="cell-value">Through My Runway Group's existing programming team relationship</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SLIDE 06 — THE GUEST ===================== -->
+  <div class="slide" data-index="5">
+    <div class="label">Primary Target Guest</div>
+    <div class="slide-body">
+      <div class="guest-name">Emma Vaughn</div>
+      <div class="guest-role">Global Head of Advertising and Content Business Development · Spotify</div>
+      <div class="divider"></div>
+      <div class="body-lg guest-note">
+        Spotify is an official Cannes Lions partner with a confirmed major presence at the 2026 festival, including multiple sessions and the Spotify Beach activation. An executive at that level, at that festival, carries institutional weight. The right question, put to someone with that title in front of that audience, does not disappear when the session ends.
+      </div>
+      <div class="secondary-target" style="margin-top: auto;">
+        <div class="secondary-label">Secondary Targets · If Spotify Unavailable</div>
+        <div class="body-md" style="line-height: 1.7;">
+          <span class="bold">Senior marketing executive, Diageo Africa</span> — one of the continent's largest cultural spenders.<br>
+          <span class="bold">CEO, Flutterwave or Paystack</span> — the payment infrastructure layer that is the most direct structural answer to the sharecropping argument.<br>
+          <span style="color: var(--muted); font-size: 13px;">The guest does not need to agree with the thesis. Senior enough to carry weight in that room is the only requirement.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SLIDE 07 — WHAT RETURNS ===================== -->
+  <div class="slide" data-index="6">
+    <div class="label">What This Returns for My Runway Group</div>
+    <div class="slide-body">
+      <div class="d-sm" style="margin-top: 0;">Four returns from one session.</div>
+      <div class="returns-grid">
+        <div class="return-card">
+          <div class="return-num">01 · Proof of Position</div>
+          <div class="return-heading">From closed-door to public record</div>
+          <div class="return-body">A hosted session at LIONS Creators in 2026, with a credible host and a named institutional guest, moves the 2025 focus group from a closed-door conversation to a public record. Future partners and funders will see the difference.</div>
+        </div>
+        <div class="return-card">
+          <div class="return-num">02 · Institutional Visibility</div>
+          <div class="return-heading">The session title makes the argument</div>
+          <div class="return-body">My Runway Group's name attached to a session at the world's most important creative festival, at the track explicitly focused on the creator economy. The session title alone is an editorial statement.</div>
+        </div>
+        <div class="return-card">
+          <div class="return-num">03 · Content and Coverage</div>
+          <div class="return-heading">Committed deliverables</div>
+          <div class="return-body">3 X thread series from inside the festival · 1 OSN editorial piece post-festival · 1 long-form piece pitched to OkayAfrica. All three will reference My Runway Group and afriCANNES to build the initiative's profile.</div>
+        </div>
+        <div class="return-card">
+          <div class="return-num">04 · Relationship Capital</div>
+          <div class="return-heading">On stage, not in the audience</div>
+          <div class="return-body">A delegate on stage enters the hallway conversations at Cannes differently. That is where the deals that follow the festival are made.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SLIDE 08 — WHAT I BRING ===================== -->
+  <div class="slide" data-index="7">
+    <div class="label">What I Bring to the Session</div>
+    <div class="slide-body">
+      <div class="d-sm" style="max-width: 680px; margin-top: 0;">A journalist with a decade of evidence inside the industry.</div>
+      <div class="cred-list">
+        <div class="cred-item">
+          <div class="cred-num">01</div>
+          <div class="cred-text"><strong>US Embassy-accredited coverage of Amaarae's Coachella 2025 debut</strong> — the first official Ghanaian press credential at that stage, in partnership with the US Embassy Ghana.</div>
+        </div>
+        <div class="cred-item">
+          <div class="cred-num">02</div>
+          <div class="cred-text"><strong>CNN Academy Voices From The South Fellow</strong> — selected from over 10,000 applicants across 129 countries.</div>
+        </div>
+        <div class="cred-item">
+          <div class="cred-num">03</div>
+          <div class="cred-text"><strong>The iShowSpeed/Ghana piece</strong> — a single analysis that generated millions of impressions and a continental soft power conversation that is still running. The follower count is under 200,000. The impressions-per-piece number is what brands in that room pay attention to.</div>
+        </div>
+        <div class="cred-item">
+          <div class="cred-num">04</div>
+          <div class="cred-text">Founder of <strong>OSN (Olele Salvador Network)</strong>, an independent editorial outlet being built with continental ambition. Published in OkayAfrica, Citi Newsroom, and international outlets covering Africa's cultural and creative economy.</div>
+        </div>
+        <div class="cred-coda">
+          A keynote speaker or brand consultant brings neither the access nor the receipts. A journalist with a decade of evidence inside the industry does.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SLIDE 09 — THE INVESTMENT ===================== -->
+  <div class="slide" data-index="8">
+    <div class="label">The Investment Ask</div>
+    <div class="invest-wrap">
+      <div>
+        <div class="body-md" style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px;">Budget</div>
+        <table class="invest-table">
+          <tr>
+            <td>Cannes Lions delegate pass (Classic, per official pricing)</td>
+            <td>€4,465</td>
+          </tr>
+          <tr>
+            <td>Return flights · Accra to Nice</td>
+            <td>~€800–1,200</td>
+          </tr>
+          <tr>
+            <td>Accommodation · 5 nights · Cannes</td>
+            <td>~€1,500–2,500</td>
+          </tr>
+          <tr class="row-total">
+            <td>Total estimated investment</td>
+            <td>~€6,800–8,200</td>
+          </tr>
+        </table>
+        <div class="invest-note">
+          Speaking at the festival carries no fee; Cannes Lions does not charge or pay speakers. Press accreditation, accessible through My Runway Group's relationship, reduces or eliminates the delegate pass cost. Application window runs until June 15, 2026.
+        </div>
+        <div class="deadline">⟶ Decision needed by mid-April 2026</div>
+      </div>
+      <div>
+        <div class="body-md" style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px;">What I Need</div>
+        <div class="needs-list">
+          <div class="need-item">
+            <span class="need-num">1</span>
+            <span><span class="need-strong">Session activation</span> — through My Runway Group's existing programming team relationship, established through the 2025 focus group.</span>
+          </div>
+          <div class="need-item">
+            <span class="need-num">2</span>
+            <span><span class="need-strong">Guest introduction</span> — a warm introduction to Spotify, Diageo, Flutterwave, or Paystack turns a cold pitch.</span>
+          </div>
+          <div class="need-item">
+            <span class="need-num">3</span>
+            <span><span class="need-strong">Accreditation framing</span> — press credentials that position me accurately as journalist and founder.</span>
+          </div>
+          <div class="need-item">
+            <span class="need-num">4</span>
+            <span><span class="need-strong">Content clearance</span> — agreement to reference My Runway Group and afriCANNES in Cannes coverage.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SLIDE 10 — THE CLOSE ===================== -->
+  <div class="slide s-close" data-index="9">
+    <div>
+      <div class="label">The Case</div>
+      <div class="close-l1">The conversation about Africa's creator economy will happen at Cannes Lions 2026.</div>
+      <div class="close-l2">My Runway Group is positioned to determine what that conversation produces.</div>
+      <div class="close-l3">That is worth building together.</div>
+      <div class="close-contact">
+        <div class="close-name">Olele Salvador · OSN 🦅🇬🇭</div>
+        <div class="close-email">partnerships@olelesalvador.com</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /deck -->
+
+<!-- Navigation UI -->
+<div class="nav" id="nav">
+  <button class="nav-btn" onclick="go(-1); event.stopPropagation();">←</button>
+  <span class="nav-counter" id="ctr">1 / 10</span>
+  <button class="nav-btn" onclick="go(1); event.stopPropagation();">→</button>
+</div>
+
+<!-- Progress bar -->
+<div class="progress" id="prog"></div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total  = slides.length;
+  let   cur    = 0;
+
+  function show(n) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(total - 1, n));
+    slides[cur].classList.add('active');
+    document.getElementById('ctr').textContent  = `${cur + 1} / ${total}`;
+    document.getElementById('prog').style.width = `${((cur + 1) / total) * 100}%`;
+  }
+
+  function go(dir) { show(cur + dir); }
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight','ArrowDown',' '].includes(e.key)) { e.preventDefault(); go(1); }
+    if (['ArrowLeft','ArrowUp'].includes(e.key))        { e.preventDefault(); go(-1); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End')  show(total - 1);
+  });
+
+  // Click deck to advance (skip nav buttons)
+  document.getElementById('deck').addEventListener('click', e => {
+    if (!e.target.closest('#nav')) go(1);
+  });
+
+  // Init progress bar
+  document.getElementById('prog').style.width = `${(1 / total) * 100}%`;
+</script>
+</body>
+</html>
