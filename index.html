@@ -701,6 +701,75 @@
   }
 
 
+  /* ===== MOBILE ===== */
+  @media (max-width: 767px) {
+    html, body { overflow: hidden; height: 100%; }
+
+    .deck { cursor: default; }
+
+    .slide {
+      padding: 32px 20px 64px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Cover */
+    .cover-title { font-size: clamp(52px, 14vw, 72px); line-height: 0.9; }
+    .cover-subtitle { font-size: clamp(14px, 3.5vw, 18px); margin-top: 12px; }
+    .cover-footer { flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 20px; }
+    .cover-sep { display: none; }
+    .cover-badges { flex-wrap: wrap; gap: 6px; }
+    .badge { font-size: 8px; padding: 4px 8px; }
+
+    /* Stat row → stacked */
+    .stat-row { flex-direction: column; gap: 16px; margin-top: 20px; }
+    .stat-item { padding-right: 0; border-top: 1px solid var(--border); }
+
+    /* Problem grid → single column */
+    .problem-grid { grid-template-columns: 1fr; gap: 16px; }
+    .problem-left { border-left: none; border-top: 2px solid var(--terra); padding-left: 0; padding-top: 14px; }
+
+    /* Session grid → single column */
+    .session-grid { grid-template-columns: 1fr; }
+    .session-title { font-size: clamp(16px, 4.5vw, 22px); }
+
+    /* Returns grid → single column */
+    .returns-grid { grid-template-columns: 1fr; }
+
+    /* Guest */
+    .guest-name { font-size: clamp(36px, 9vw, 52px); }
+    .guest-role { font-size: clamp(13px, 3.2vw, 16px); }
+
+    /* Investment → single column */
+    .invest-wrap { grid-template-columns: 1fr; gap: 28px; }
+    .invest-table { font-size: 12px; }
+
+    /* Close */
+    .close-l1 { font-size: clamp(20px, 5.5vw, 28px); }
+    .close-l2 { font-size: clamp(22px, 6vw, 30px); }
+    .close-l3 { font-size: clamp(20px, 5.5vw, 28px); }
+
+    /* Display sizes mobile override */
+    .d-xl { font-size: clamp(38px, 10vw, 56px); }
+    .d-lg { font-size: clamp(28px, 7.5vw, 40px); }
+    .d-md { font-size: clamp(20px, 5vw, 26px); }
+
+    /* Nav */
+    .nav { bottom: 16px; right: 16px; gap: 10px; }
+    .nav-btn { width: 40px; height: 40px; font-size: 16px; } /* bigger tap target */
+
+    /* Thesis */
+    .s-thesis { padding: 32px 20px; }
+    .thesis-quote { font-size: clamp(18px, 5vw, 24px); }
+
+    /* Slide body flex */
+    .slide-body { min-height: 0; }
+
+    /* cred list spacing */
+    .cred-item { padding: 14px 0; }
+    .cred-coda { font-size: clamp(14px, 3.8vw, 18px); }
+  }
+
   /* ===== PRINT — one slide per page ===== */
   @media print {
     html, body { overflow: visible; height: auto; }
@@ -1031,10 +1100,24 @@
     if (e.key === 'End')  show(total - 1);
   });
 
-  // Click deck to advance (skip nav buttons)
+  // Click deck to advance (skip nav buttons) — desktop only
   document.getElementById('deck').addEventListener('click', e => {
-    if (!e.target.closest('#nav')) go(1);
+    if (window.matchMedia('(min-width: 768px)').matches && !e.target.closest('#nav')) go(1);
   });
+
+  // Touch swipe — horizontal for slide nav, vertical allowed for scroll
+  let tx = 0, ty = 0;
+  document.getElementById('deck').addEventListener('touchstart', e => {
+    tx = e.touches[0].clientX;
+    ty = e.touches[0].clientY;
+  }, { passive: true });
+  document.getElementById('deck').addEventListener('touchend', e => {
+    const dx = tx - e.changedTouches[0].clientX;
+    const dy = ty - e.changedTouches[0].clientY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      go(dx > 0 ? 1 : -1);
+    }
+  }, { passive: true });
 
   // Init progress bar
   document.getElementById('prog').style.width = `${(1 / total) * 100}%`;
